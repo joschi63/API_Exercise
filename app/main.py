@@ -3,6 +3,8 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg
+import time
 
 
 app = FastAPI()
@@ -16,6 +18,20 @@ class Post(BaseModel):
 my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, 
             {"title": "favorite foods", "content": "I like pizza", "id": 2}]
 
+while True:
+    try: 
+        conn = psycopg.connect("host=localhost port=5432 dbname=postgres user=postgres password=13579")
+        cur = conn.cursor() 
+                
+        print("successfully connected to the database")
+        break
+    except Exception as error:
+        print("unable to connect to the database")
+        print("Error details:", error)
+        break
+            
+
+
 def find_post(id):
     for p in my_posts:
         if p['id'] == id:
@@ -28,18 +44,22 @@ def find_index_post(id):
 
 @app.get("/")
 def root():
+    
     return {"message": "Hello World"}
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cur.execute("""SELECT * FROM posts""")
+    posts = cur.fetchall()
+
+    return {"data": posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(new_post: Post):
-    post_dict = new_post.model_dump(mode="dict")
-    post_dict['id'] = randrange(0, 1000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+def create_post(post: Post):
+    cur.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", (post.title, post.content, post.published))
+    new_post = cur.fetchone()
+    conn.commit()
+    return {"data": new_post}
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
