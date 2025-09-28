@@ -6,8 +6,14 @@ from random import randrange
 import psycopg
 import time
 
+from sqlmodel import select
+from .database import create_db_and_tables, SessionDep
+from .models import Post1
+
 
 app = FastAPI()
+
+
 
 class Post(BaseModel):
     title: str
@@ -41,10 +47,18 @@ def find_index_post(id):
     for i, p in enumerate(my_posts):
         if p['id'] == id:
             return i 
+        
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
 @app.get("/")
 def root():
     return {"message": "Hello World"}
+
+@app.get("/sql")
+def test_sql(session: SessionDep):
+    return {"status": "ok"}
 
 @app.get("/posts")
 def get_posts():
