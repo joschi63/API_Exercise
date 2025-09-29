@@ -4,7 +4,7 @@ from pydantic import ConfigDict
 from sqlalchemy import Boolean, text, TIMESTAMP
 
 
-class Post1(SQLModel, table=True):
+class Post(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True, nullable=False)
     title: str = Field(nullable=False)
     content: str = Field(nullable=False)

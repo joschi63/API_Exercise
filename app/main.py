@@ -8,18 +8,10 @@ import time
 
 from sqlmodel import select
 from .database import create_db_and_tables, SessionDep
-from .models import Post1
+from .models import Post
 
 
 app = FastAPI()
-
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-    rating: Optional[int] = None
 
 my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, 
             {"title": "favorite foods", "content": "I like pizza", "id": 2}]
@@ -58,47 +50,50 @@ def root():
 
 @app.get("/sql")
 def test_sql(session: SessionDep):
-    return {"status": "ok"}
+    datas = session.exec(select(Post)).all()
+
+    return {"status": datas}
 
 @app.get("/posts")
-def get_posts():
-    cur.execute("""SELECT * FROM posts""")
-    posts = cur.fetchall()
+def get_posts(session: SessionDep):
+    posts = session.exec(select(Post)).all()
 
     return {"data": posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-    cur.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", (post.title, post.content, post.published))
-    new_post = cur.fetchone()
-    conn.commit()
-    return {"data": new_post}
+def create_post(post: Post, session: SessionDep):
+    session.add(post)
+    session.commit()
+    session.refresh(post)
+    return {"data": post}
 
 
 @app.get("/posts/{id}")
-def get_post(id: int):
-    cur.execute("""SELECT * FROM posts WHERE id = %s""", (str(id),))
-    post = cur.fetchone()
+def get_post(id: int, session: SessionDep):
+    post = session.get(Post, id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    
 
     return {"post_detail": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    cur.execute("""DELETE FROM posts WHERE id = %s RETURNING *""", (str(id),))
-    deleted_post = cur.fetchone()
-    conn.commit()
-    if not deleted_post:
+def delete_post(id: int, session: SessionDep):
+    post = session.get(Post, id)
+    if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
+    
+    session.delete(post)
+    session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    cur.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id),))
-    updated_post = cur.fetchone()
-    conn.commit()
-    if not updated_post:
+def update_post(id: int, post: Post, session: SessionDep):
+    db_post = session.get(Post, id)
+    if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    return {"data": updated_post}
+    db_post.sqlmodel_update(post.model_dump(exclude_unset=True))
+    session.add(db_post)
+    session.commit()
+    session.refresh(db_post)
+
+    return "True"
