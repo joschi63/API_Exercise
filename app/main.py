@@ -13,33 +13,7 @@ from .models import Post
 
 app = FastAPI()
 
-my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, 
-            {"title": "favorite foods", "content": "I like pizza", "id": 2}]
 
-while True:
-    try: 
-        conn = psycopg.connect("host=localhost port=5432 dbname=postgres user=postgres password=13579")
-        cur = conn.cursor() 
-                
-        print("successfully connected to the database")
-        break
-    except Exception as error:
-        print("unable to connect to the database")
-        print("Error details:", error)
-        break
-            
-
-
-def find_post(id):
-    for p in my_posts:
-        if p['id'] == id:
-            return p
-        
-def find_index_post(id):
-    for i, p in enumerate(my_posts):
-        if p['id'] == id:
-            return i 
-        
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
@@ -47,12 +21,6 @@ def on_startup():
 @app.get("/")
 def root():
     return {"message": "Hello World"}
-
-@app.get("/sql")
-def test_sql(session: SessionDep):
-    datas = session.exec(select(Post)).all()
-
-    return {"status": datas}
 
 @app.get("/posts")
 def get_posts(session: SessionDep):
