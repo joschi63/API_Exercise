@@ -2,14 +2,15 @@ from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column
 from pydantic import ConfigDict, EmailStr
 from sqlalchemy import Boolean, text, TIMESTAMP
+from datetime import datetime
 
 
 class UserBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True, nullable=False)
     password: str = Field(nullable=False)
+    email: str = Field(nullable=False, unique=True)
 
 class User(UserBase, table=True):
-    email: str = Field(nullable=False, unique=True)
     created_at: str | None = Field(
         sa_column=Column(
             TIMESTAMP(timezone=True), server_default=text("now()")
@@ -21,5 +22,11 @@ class User(UserBase, table=True):
         ), default=None
     )
 
+class UserRead(SQLModel):
+    id: int
+    email: str
+    created_at: datetime
+
 class UserCreate(UserBase):
     email: EmailStr = Field(nullable=False, unique=True)
+

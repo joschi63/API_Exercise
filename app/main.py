@@ -9,7 +9,7 @@ import time
 from sqlmodel import select
 from .database import create_db_and_tables, SessionDep
 from .models.post_models import PostBase, Post, PostCreate, PostUpdate, PostRead
-from .models.user_models import User, UserCreate
+from .models.user_models import User, UserCreate, UserRead
 
 
 app = FastAPI()
@@ -31,12 +31,12 @@ def get_posts(session: SessionDep):
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=PostRead)
 def create_post(post: PostCreate, session: SessionDep):
-    db_post = Post.model_validate(post)
-    session.add(db_post)
+    new_post = Post.model_validate(post)
+    session.add(new_post)
     session.commit()
-    session.refresh(db_post)
+    session.refresh(new_post)
 
-    return db_post
+    return new_post
 
 
 @app.get("/posts/{id}", response_model=PostRead)
@@ -74,11 +74,17 @@ def update_post(id: int, post: PostUpdate, session: SessionDep):
 
     return db_post
 
-@app.post("/users", status_code=status.HTTP_201_CREATED)
-def create_user(user: UserCreate, session: SessionDep):
-    db_user = User.model_validate(user)
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+@app.get("/users", response_model=list[UserRead])
+def get_users(session: SessionDep):
+    users = session.exec(select(User)).all()
 
-    return db_user
+    return users
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+def create_user(user: UserCreate, session: SessionDep):
+    new_user = User.model_validate(user)
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
+
+    return new_user
