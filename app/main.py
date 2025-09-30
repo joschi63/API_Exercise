@@ -8,7 +8,7 @@ import time
 
 from sqlmodel import select
 from .database import create_db_and_tables, SessionDep
-from .models import Post
+from .models import PostBase, Post, PostCreate, PostUpdate, PostRead
 
 
 app = FastAPI()
@@ -22,21 +22,22 @@ def on_startup():
 def root():
     return {"message": "Hello World"}
 
-@app.get("/posts")
+@app.get("/posts", response_model=list[PostRead])
 def get_posts(session: SessionDep):
     posts = session.exec(select(Post)).all()
 
-    return {"data": posts}
+    return posts
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, session: SessionDep):
-    session.add(post)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=PostRead)
+def create_post(post: PostCreate, session: SessionDep):
+    db_post = Post.model_validate(post)
+    session.add(db_post)
     session.commit()
-    session.refresh(post)
-    return {"data": post}
+    session.refresh(db_post)
+    return db_post
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=PostRead)
 def get_post(id: int, session: SessionDep):
     post = session.get(Post, id)
     if not post:
@@ -54,8 +55,8 @@ def delete_post(id: int, session: SessionDep):
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post, session: SessionDep):
+@app.put("/posts/{id}", response_model=PostRead, status_code=status.HTTP_200_OK)
+def update_post(id: int, post: PostUpdate, session: SessionDep):
     db_post = session.get(Post, id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
@@ -64,4 +65,4 @@ def update_post(id: int, post: Post, session: SessionDep):
     session.commit()
     session.refresh(db_post)
 
-    return "True"
+    return db_post
