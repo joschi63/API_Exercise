@@ -2,16 +2,16 @@ from .database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column
 from pydantic import ConfigDict
 from sqlalchemy import Boolean, text, TIMESTAMP
+from datetime import datetime
 
 
 class PostBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True, nullable=False)
-    
+    title: str = Field(nullable=False)
+    content: str = Field(nullable=False)
     published: bool = Field(
         sa_column=Column(Boolean, nullable=False, server_default=text("TRUE"))
     ) #this is special for setting a default value in a postgresql database
-    title: str = Field(nullable=False)
-    content: str = Field(nullable=False)
 
     
 class Post(PostBase, table=True):
@@ -28,7 +28,7 @@ class Post(PostBase, table=True):
     
     
 class PostRead(PostBase):
-    pass
+    created_at: datetime
     
 
 class PostCreate(PostBase):
