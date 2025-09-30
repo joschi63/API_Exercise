@@ -34,12 +34,14 @@ def create_post(post: PostCreate, session: SessionDep):
     session.add(db_post)
     session.commit()
     session.refresh(db_post)
+
     return db_post
 
 
 @app.get("/posts/{id}", response_model=PostRead)
 def get_post(id: int, session: SessionDep):
     post = session.get(Post, id)
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
 
@@ -48,18 +50,22 @@ def get_post(id: int, session: SessionDep):
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, session: SessionDep):
     post = session.get(Post, id)
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
     
     session.delete(post)
     session.commit()
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}", response_model=PostRead, status_code=status.HTTP_200_OK)
 def update_post(id: int, post: PostUpdate, session: SessionDep):
     db_post = session.get(Post, id)
+
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
+    
     db_post.sqlmodel_update(post.model_dump(exclude_unset=True))
     session.add(db_post)
     session.commit()
