@@ -1,4 +1,4 @@
-from .database import engine, SessionDep
+from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column
 from pydantic import ConfigDict
 from sqlalchemy import Boolean, text, TIMESTAMP
@@ -45,6 +45,7 @@ class PostUpdate(PostBase):
         ), default=None
     )
     
+
 
 
     #model_config = ConfigDict(table_name="posts")
