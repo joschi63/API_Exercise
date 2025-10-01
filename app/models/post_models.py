@@ -1,6 +1,6 @@
 from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column
-from pydantic import ConfigDict
+from pydantic import BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
 from datetime import datetime
 
@@ -27,8 +27,13 @@ class Post(PostBase, table=True):
     )
     
     
-class PostRead(PostBase):
+class PostRead(SQLModel):
+    id: int
+    title: str
+    content: str
+    published: bool
     created_at: datetime
+   
     
 
 class PostCreate(PostBase):
