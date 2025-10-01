@@ -1,6 +1,6 @@
 from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column
-from pydantic import ConfigDict, EmailStr
+from pydantic import ConfigDict, EmailStr, BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
 from datetime import datetime
 
@@ -22,7 +22,7 @@ class User(UserBase, table=True):
         ), default=None
     )
 
-class UserRead(SQLModel):
+class UserRead(BaseModel):
     id: int
     email: str
     created_at: datetime

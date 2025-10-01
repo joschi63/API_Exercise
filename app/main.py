@@ -11,8 +11,11 @@ from .database import create_db_and_tables, SessionDep
 from .models.post_models import PostBase, Post, PostCreate, PostUpdate, PostRead
 from .models.user_models import User, UserCreate, UserRead
 
+from argon2 import PasswordHasher
+
 
 app = FastAPI()
+ph = PasswordHasher()
 
 
 @app.on_event("startup")
@@ -74,14 +77,25 @@ def update_post(id: int, post: PostUpdate, session: SessionDep):
 
     return db_post
 
+
 @app.get("/users", response_model=list[UserRead])
 def get_users(session: SessionDep):
     users = session.exec(select(User)).all()
 
     return users
 
+@app.get("/users/{id}", response_model=UserRead)
+def get_user(id: int, session: SessionDep):
+    user = session.get(User, id)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user with id: {id} was not found")
+
+    return user
+
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 def create_user(user: UserCreate, session: SessionDep):
+    user.password = ph.hash(user.password)
     new_user = User.model_validate(user)
     session.add(new_user)
     session.commit()
