@@ -25,11 +25,14 @@ fake_users_db = {
     }
 }
 
+##
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+##
 class TokenData(BaseModel):
+    id: str | None = None
     username: str | None = None
 
 class User(BaseModel):
@@ -43,11 +46,13 @@ class UserInDB(User):
 
 password_hash = PasswordHasher()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI()
 
-def verify_password(hashed_password, plain_password):
+##
+def verify_password(hashed_password, plain_password): 
     try: 
         return password_hash.verify(hashed_password, plain_password)
     except VerifyMismatchError: #to avoid that argon2 throws his own error
@@ -69,6 +74,7 @@ def authenticate_user(fake_db, username: str, password: str):
         return False
     return user
 
+##
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta: 
@@ -80,6 +86,28 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+##
+def verify_access_token(token: str, credentials_exception):
+    try: 
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        id: str = payload.get("user_id")
+
+        if id is None:
+            raise credentials_exception
+        token_data = TokenData(id=id)
+    except jwt.PyJWTError:
+        raise credentials_exception
+    
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    return verify_access_token(token, credentials_exception)
+
+'''
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -100,6 +128,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
+    '''
 
 async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.disabled:
