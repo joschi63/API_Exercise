@@ -30,3 +30,8 @@ class UserRead(BaseModel):
 class UserCreate(UserBase):
     email: EmailStr = Field(nullable=False, unique=True)
 
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
