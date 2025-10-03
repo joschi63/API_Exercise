@@ -18,7 +18,7 @@ def get_posts(session: SessionDep):
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
-def create_post(post: PostCreate, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
+def create_post(post: PostCreate, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
     new_post = Post.model_validate(post)
     session.add(new_post)
     session.commit()
