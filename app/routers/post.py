@@ -1,8 +1,10 @@
-from fastapi import Response, status, HTTPException, APIRouter
+from fastapi import Response, status, HTTPException, APIRouter, Depends
 
 from sqlmodel import select
 from ..database import SessionDep
 from ..models.post_models import Post, PostCreate, PostUpdate, PostRead
+
+from .. import token_managing as tm
 
 router = APIRouter(
     prefix="/posts",
@@ -16,7 +18,7 @@ def get_posts(session: SessionDep):
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
-def create_post(post: PostCreate, session: SessionDep):
+def create_post(post: PostCreate, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
     new_post = Post.model_validate(post)
     session.add(new_post)
     session.commit()

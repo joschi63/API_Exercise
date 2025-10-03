@@ -19,10 +19,10 @@ def login(session: SessionDep, user_cred: OAuth2PasswordRequestForm = Depends())
     user = session.exec(select(User).where(User.email == user_cred.username)).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Credentials")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Credentials")
     
     if not tm.verify_password(user.password, user_cred.password):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid Credentials")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Credentials")
 
     access_token = tm.create_access_token(data={"user_id": user.id})
     
