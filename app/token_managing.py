@@ -15,22 +15,12 @@ SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1
 
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$wagCPXjifgvUFBzq4hqe3w$CYaIb8sB+wtD+Vu/P4uod1+Qof8h+1g7bbDlBID48Rc",
-        "disabled": False,
-    }
-}
 
-##
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-##
+
 class TokenData(BaseModel):
     id: int | None = None
     username: str | None = None
@@ -46,35 +36,18 @@ class UserInDB(User):
 
 password_hash = PasswordHasher()
 
-#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI()
 
-##
+
 def verify_password(hashed_password, plain_password): 
     try: 
         return password_hash.verify(hashed_password, plain_password)
     except VerifyMismatchError: #to avoid that argon2 throws his own error
         return False
 
-def get_password_hash(password):
-    return password_hash.hash(password)
 
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
-
-##
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expires_delta = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -87,7 +60,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-##
+
 def verify_access_token(token: str, credentials_exception):
     try: 
         payload = jwt.decode(
@@ -117,7 +90,37 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     )
     return verify_access_token(token, credentials_exception)
 
+
+
 '''
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "full_name": "John Doe",
+        "email": "johndoe@example.com",
+        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$wagCPXjifgvUFBzq4hqe3w$CYaIb8sB+wtD+Vu/P4uod1+Qof8h+1g7bbDlBID48Rc",
+        "disabled": False,
+    }
+}
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_password_hash(password):
+    return password_hash.hash(password)
+
+def get_user(db, username: str):
+    if username in db:
+        user_dict = db[username]
+        return UserInDB(**user_dict)
+
+def authenticate_user(fake_db, username: str, password: str):
+    user = get_user(fake_db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -138,7 +141,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
-    '''
 
 async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.disabled:
@@ -173,3 +175,4 @@ async def read_own_items(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
+'''
