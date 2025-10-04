@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=list[PostRead])
-def get_posts(session: SessionDep):
+def get_posts(session: SessionDep, user_id: int = Depends(tm.get_current_user)):
     posts = session.exec(select(Post)).all()
 
     return posts
@@ -28,7 +28,7 @@ def create_post(post: PostCreate, session: SessionDep, user_id: int = Depends(tm
 
 
 @router.get("/{id}", response_model=PostRead)
-def get_post(id: int, session: SessionDep):
+def get_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
     post = session.get(Post, id)
 
     if not post:
@@ -37,7 +37,7 @@ def get_post(id: int, session: SessionDep):
     return post
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, session: SessionDep):
+def delete_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
     post = session.get(Post, id)
 
     if not post:
@@ -49,7 +49,7 @@ def delete_post(id: int, session: SessionDep):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.put("/{id}", response_model=PostRead, status_code=status.HTTP_200_OK)
-def update_post(id: int, post: PostUpdate, session: SessionDep):
+def update_post(id: int, post: PostUpdate, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
     db_post = session.get(Post, id)
 
     if not db_post:

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import jwt 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jwt.exceptions import InvalidTokenError
+from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
 
 fake_users_db = {
     "johndoe": {
@@ -32,7 +32,7 @@ class Token(BaseModel):
 
 ##
 class TokenData(BaseModel):
-    id: str | None = None
+    id: int | None = None
     username: str | None = None
 
 class User(BaseModel):
@@ -77,6 +77,7 @@ def authenticate_user(fake_db, username: str, password: str):
 ##
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
+    expires_delta = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     if expires_delta: 
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -89,14 +90,21 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 ##
 def verify_access_token(token: str, credentials_exception):
     try: 
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
 
-        id: str = str(payload.get("user_id"))
+        id = payload.get("user_id")
+    
+        token_data = TokenData(id=id)
     
         if id is None:
             raise credentials_exception
         token_data = TokenData(id=id)
-    except jwt.PyJWTError:
+    
+    except InvalidTokenError:
         raise credentials_exception
     
     return token_data

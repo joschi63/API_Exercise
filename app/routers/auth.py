@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import Body
 
-@router.post("/login")
+@router.get("/login", response_model=tm.Token)
 def login(session: SessionDep, user_cred: OAuth2PasswordRequestForm = Depends()):
     user = session.exec(select(User).where(User.email == user_cred.username)).first()
 
