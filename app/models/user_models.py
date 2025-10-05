@@ -1,14 +1,16 @@
 from ..database import engine, SessionDep
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field, Column, Relationship
 from pydantic import ConfigDict, EmailStr, BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
 from datetime import datetime
+
 
 
 class UserBase(SQLModel):
     id: int | None = Field(default=None, primary_key=True, nullable=False)
     password: str = Field(nullable=False)
     email: str = Field(nullable=False, unique=True)
+    
 
 class User(UserBase, table=True, table_name="users"):
     __tablename__ = "users" #type: ignore
@@ -22,6 +24,8 @@ class User(UserBase, table=True, table_name="users"):
             TIMESTAMP(timezone=True), nullable=True, server_default=None, onupdate=text("now()")
         ), default=None
     )
+    #Type hinting with a string to avoid circular import
+    posts: "Post" = Relationship(back_populates="owner") #type: ignore
 
 class UserRead(BaseModel):
     id: int

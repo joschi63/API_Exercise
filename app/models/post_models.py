@@ -1,8 +1,9 @@
 from ..database import engine, SessionDep
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field, Column, Relationship
 from pydantic import BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
 from datetime import datetime
+from .user_models import UserRead
 
 
 class PostBase(SQLModel):
@@ -27,14 +28,17 @@ class Post(PostBase, table=True):
             TIMESTAMP(timezone=True), server_default=None
         ), default=None
     )
+    #Type hinting with a string to avoid circular import
+    owner: "User" = Relationship(back_populates="posts") #type: ignore
     
-class PostRead(SQLModel):
+class PostRead(BaseModel):
     id: int
     title: str
     content: str
     published: bool
     created_at: datetime
     owner_id: int
+    owner: UserRead
    
     
 
