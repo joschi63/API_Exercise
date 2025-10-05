@@ -11,9 +11,12 @@ from argon2.exceptions import VerifyMismatchError
 
 from pydantic import BaseModel
 
+from .database import SessionDep
+from .routers import user
+
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 class Token(BaseModel):
@@ -50,7 +53,7 @@ def verify_password(hashed_password, plain_password):
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expires_delta = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
+    expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     if expires_delta: 
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -82,13 +85,18 @@ def verify_access_token(token: str, credentials_exception):
     
     return token_data
     
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    return verify_access_token(token, credentials_exception)
+
+    token_user = verify_access_token(token, credentials_exception)
+
+    session_user = session.get(user.User, token_user.id)
+
+    return session_user
 
 
 

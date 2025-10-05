@@ -15,6 +15,7 @@ class PostBase(SQLModel):
 
     
 class Post(PostBase, table=True):
+    __tablename__ = "posts" #type: ignore
     created_at: str | None = Field(
         sa_column=Column(
             TIMESTAMP(timezone=True), server_default=text("now()")

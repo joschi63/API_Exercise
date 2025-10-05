@@ -12,13 +12,14 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=list[PostRead])
-def get_posts(session: SessionDep, user_id: int = Depends(tm.get_current_user)):
+def get_posts(session: SessionDep, current_user: int = Depends(tm.get_current_user)):
     posts = session.exec(select(Post)).all()
 
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
-def create_post(post: PostCreate, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
+def create_post(post: PostCreate, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
+    #print(current_user.email)
     new_post = Post.model_validate(post)
     session.add(new_post)
     session.commit()
@@ -28,7 +29,7 @@ def create_post(post: PostCreate, session: SessionDep, user_id: int = Depends(tm
 
 
 @router.get("/{id}", response_model=PostRead)
-def get_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
+def get_post(id: int, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
     post = session.get(Post, id)
 
     if not post:
@@ -37,7 +38,7 @@ def get_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_current
     return post
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
+def delete_post(id: int, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
     post = session.get(Post, id)
 
     if not post:
@@ -49,7 +50,7 @@ def delete_post(id: int, session: SessionDep, user_id: int = Depends(tm.get_curr
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.put("/{id}", response_model=PostRead, status_code=status.HTTP_200_OK)
-def update_post(id: int, post: PostUpdate, session: SessionDep, user_id: int = Depends(tm.get_current_user)):
+def update_post(id: int, post: PostUpdate, session: SessionDep, current_user: int = Depends(tm.get_current_user)):
     db_post = session.get(Post, id)
 
     if not db_post:
