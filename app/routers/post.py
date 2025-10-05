@@ -13,7 +13,7 @@ router = APIRouter(
 
 @router.get("/", response_model=list[PostRead])
 def get_posts(session: SessionDep, current_user = Depends(tm.get_current_user)):
-    posts = session.exec(select(Post).filter(Post.owner_id == current_user.id)).all()
+    posts = session.exec(select(Post)).all()
 
     return posts
 
@@ -23,8 +23,7 @@ def get_post(id: int, session: SessionDep, current_user= Depends(tm.get_current_
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+    
     return post
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
