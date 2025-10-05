@@ -12,21 +12,21 @@ class PostBase(SQLModel):
     published: bool = Field(
         sa_column=Column(Boolean, nullable=False, server_default=text("TRUE"))
     ) #this is special for setting a default value in a postgresql database
-
+    
     
 class Post(PostBase, table=True):
     __tablename__ = "posts" #type: ignore
+    owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
     created_at: str | None = Field(
         sa_column=Column(
-            TIMESTAMP(timezone=True), server_default=text("now()")
+            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
         ), default="now()"
     )
     updated_at: str = Field(
         sa_column=Column(
-            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"), onupdate=text("now()")
+            TIMESTAMP(timezone=True), server_default=None
         ), default=None
     )
-    
     
 class PostRead(SQLModel):
     id: int
@@ -34,15 +34,17 @@ class PostRead(SQLModel):
     content: str
     published: bool
     created_at: datetime
+    owner_id: int
    
     
 
 class PostCreate(PostBase):
     created_at: str | None = Field(
         sa_column=Column(
-            TIMESTAMP(timezone=True), server_default=text("now()")
+            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
         ), default="now()"
     )
+    owner_id: int | None = None
 
 class PostUpdate(PostBase):
     updated_at: str = Field(
@@ -50,6 +52,7 @@ class PostUpdate(PostBase):
             TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"), onupdate=text("now()")
         ), default=None
     )
+    owner_id: int | None = None
     
 
 
