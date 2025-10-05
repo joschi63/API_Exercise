@@ -36,7 +36,7 @@ def create_post(post: PostCreate, session: SessionDep, current_user = Depends(tm
     session.add(new_post)
     session.commit()
     session.refresh(new_post)
-
+    
     return new_post
 
 
