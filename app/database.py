@@ -3,16 +3,16 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-sqlite_file_name = "database.db"
+from .config import settings
 
 #sqlite_url = f"postgres://<username>:<password>@<ip-address/hostname>/<database_name>"
 
-sqlite_url = f"postgresql://postgres:13579@localhost/postgres"
+postgres_url = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}"
 
 # only for sqlite connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url)
+engine = create_engine(postgres_url)
 
-def get_ssession():
+def get_session():
     with Session(engine) as session:
         yield session
 
@@ -20,4 +20,4 @@ def get_ssession():
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
-SessionDep = Annotated[Session, Depends(get_ssession)]
+SessionDep = Annotated[Session, Depends(get_session)]

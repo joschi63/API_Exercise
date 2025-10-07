@@ -1,18 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Response, Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from ..database import SessionDep
-from ..models.user_models import User, UserLogin
+from ..models.user_models import User
 from .. import token_managing as tm
 
 router = APIRouter(
     tags=["Authentication"]
 
 )
-
-from typing import Optional
-
-from fastapi import Body
 
 @router.get("/login", response_model=tm.Token)
 def login(session: SessionDep, user_cred: OAuth2PasswordRequestForm = Depends()):

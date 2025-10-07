@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 
-from .routers import post, user, auth
+from .config import settings
 
-from .database import create_db_and_tables
+from app.routers import post, user, auth
+
+from app.database import create_db_and_tables
+
 
 
 app = FastAPI()
