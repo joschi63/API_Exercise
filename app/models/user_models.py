@@ -12,7 +12,7 @@ class UserBase(SQLModel):
     email: str = Field(nullable=False, unique=True)
     
 
-class User(UserBase, table=True, table_name="users"):
+class User(UserBase, table=True):
     __tablename__ = "users" #type: ignore
     created_at: str | None = Field(
         sa_column=Column(

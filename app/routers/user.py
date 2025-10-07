@@ -3,6 +3,7 @@ from fastapi import status, HTTPException, APIRouter
 from sqlmodel import select
 from ..database import SessionDep
 from ..models.user_models import User, UserCreate, UserRead
+from ..models.votes_models import Vote
 
 from argon2 import PasswordHasher
 
