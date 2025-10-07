@@ -1,6 +1,6 @@
 from fastapi import Response, status, HTTPException, APIRouter, Depends
-
-from sqlmodel import select
+from typing import Optional
+from sqlmodel import select, col
 from ..database import SessionDep
 from ..models.post_models import Post, PostCreate, PostUpdate, PostRead
 
@@ -12,9 +12,10 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=list[PostRead])
-def get_posts(session: SessionDep, current_user = Depends(tm.get_current_user)):
-    posts = session.exec(select(Post)).all()
-
+def get_posts(session: SessionDep, current_user = Depends(tm.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+    statement = select(Post).where(col(Post.title).contains(search)).limit(limit).offset(skip)
+    posts = session.exec(statement).all()
+    
     return posts
 
 @router.get("/{id}", response_model=PostRead)
