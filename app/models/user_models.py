@@ -1,4 +1,4 @@
-from ..database import engine, SessionDep
+#from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column, Relationship
 from pydantic import ConfigDict, EmailStr, BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
@@ -33,10 +33,10 @@ class UserRead(BaseModel):
     created_at: datetime
 
 class UserCreate(UserBase):
-    email: EmailStr = Field(nullable=False, unique=True)
+    email: str = Field(nullable=False, unique=True)
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 

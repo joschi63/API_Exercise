@@ -1,4 +1,4 @@
-from ..database import engine, SessionDep
+#from ..database import engine, SessionDep
 from sqlmodel import SQLModel, Field, Column, Relationship
 from pydantic import ConfigDict, EmailStr, BaseModel
 from sqlalchemy import Boolean, text, TIMESTAMP
