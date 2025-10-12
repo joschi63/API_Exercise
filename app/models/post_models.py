@@ -18,6 +18,7 @@ class PostBase(SQLModel):
 class Post(PostBase, table=True):
     __tablename__ = "posts" #type: ignore
     owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
+    owner: "User" = Relationship(back_populates="posts") #type: ignore
     created_at: str | None = Field(
         sa_column=Column(
             TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
@@ -29,7 +30,7 @@ class Post(PostBase, table=True):
         ), default=None
     )
     #Type hinting with a string to avoid circular import
-    owner: "User" = Relationship(back_populates="posts") #type: ignore
+   
     
 class PostRead(BaseModel):
     id: int
@@ -39,7 +40,10 @@ class PostRead(BaseModel):
     created_at: datetime
     owner_id: int
     owner: UserRead
-   
+
+class PostOut(BaseModel):
+    Post: PostRead
+    votes: int
     
 
 class PostCreate(PostBase):

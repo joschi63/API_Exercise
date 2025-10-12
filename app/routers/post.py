@@ -1,8 +1,9 @@
 from fastapi import Response, status, HTTPException, APIRouter, Depends
 from typing import Optional
-from sqlmodel import select, col
+from sqlmodel import select, col, func
 from ..database import SessionDep
-from ..models.post_models import Post, PostCreate, PostUpdate, PostRead
+from ..models.post_models import Post, PostCreate, PostUpdate, PostRead, PostOut
+from ..models.votes_models import Vote
 
 from .. import token_managing as tm
 
@@ -11,10 +12,16 @@ router = APIRouter(
     tags=["Posts"]
 )
 
-@router.get("/", response_model=list[PostRead])
+@router.get("/", response_model=list[PostOut])
 def get_posts(session: SessionDep, current_user = Depends(tm.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
-    statement = select(Post).where(col(Post.title).contains(search)).limit(limit).offset(skip)
-    posts = session.exec(statement).all()
+
+    posts = session.exec(select(Post, func.count(Vote.post_id).label("votes")) #type: ignore
+                           .where(col(Post.title)
+                                  .contains(search))
+                                  .limit(limit)
+                                  .offset(skip)
+                           .join(Vote, Post.id == Vote.post_id, isouter=False) #type: ignore
+                                  .group_by(Post.id)).all() #type: ignore
     
     return posts
 
