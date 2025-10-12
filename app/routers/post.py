@@ -20,14 +20,17 @@ def get_posts(session: SessionDep, current_user = Depends(tm.get_current_user), 
                                   .contains(search))
                                   .limit(limit)
                                   .offset(skip)
-                           .join(Vote, Post.id == Vote.post_id, isouter=False) #type: ignore
+                           .join(Vote, Post.id == Vote.post_id, isouter=True) #type: ignore
                                   .group_by(Post.id)).all() #type: ignore
     
     return posts
 
-@router.get("/{id}", response_model=PostRead)
+@router.get("/{id}", response_model=PostOut)
 def get_post(id: int, session: SessionDep, current_user= Depends(tm.get_current_user)):
-    post = session.get(Post, id)
+    post = session.exec(select(Post, func.count(Vote.post_id).label("votes")) #type: ignore
+                            .where(Post.id == id)
+                            .join(Vote, Post.id == Vote.post_id, isouter=True) #type: ignore
+                                  .group_by(Post.id)).first() #type: ignore
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")

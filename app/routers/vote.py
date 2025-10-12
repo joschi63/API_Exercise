@@ -4,6 +4,7 @@ from sqlmodel import select
 from ..database import SessionDep
 from .. import token_managing as tm
 from ..models.votes_models import VoteCreate, Vote
+from ..models.post_models import Post
 
 router = APIRouter(
     prefix="/vote",
@@ -13,7 +14,7 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def vote(vote: VoteCreate, session: SessionDep, current_user=Depends(tm.get_current_user)):
 
-    post = session.exec(select(Vote).where(Vote.post_id == vote.post_id)).first()
+    post = session.exec(select(Post).where(Post.id == vote.post_id)).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {vote.post_id} does not exist")
 
