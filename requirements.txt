@@ -25,8 +25,7 @@ mdurl==0.1.2
 orjson==3.11.3
 psycopg==3.2.10
 psycopg-binary==3.2.10
-psycopg2==2.9.11
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.11
 pwdlib==0.2.1
 pycparser==2.23
 pydantic==2.11.7
