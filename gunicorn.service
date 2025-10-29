@@ -7,6 +7,7 @@ User=joschi
 Group=joschi
 WorkingDirectory=/home/joschi/app/src 
 Environment="PATH=/home/joschi/app/venv/bin"
+EnvironmentFile=/home/joschi/.env
 ExecStart=/home/joschi/app/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
 
 [Install]
