@@ -29,6 +29,10 @@ def get_user(id: int, session: SessionDep):
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 def create_user(user: UserCreate, session: SessionDep):
+    user_db = session.exec(select(User).where(User.email == user.email)).first()
+    if user_db: 
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"there exists already a user with the email: {user.email}")
+        
     user.password = ph.hash(user.password)
     new_user = User.model_validate(user)
     session.add(new_user)
