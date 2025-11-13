@@ -12,6 +12,9 @@ router = APIRouter(
 
 @router.post("/login", response_model=tm.Token)
 def login(session: SessionDep, user_cred: OAuth2PasswordRequestForm = Depends()):
+    if not user_cred.username or not user_cred.password:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No username or password provided")
+    
     user = session.exec(select(User).where(User.email == user_cred.username)).first()
 
     if not user:
