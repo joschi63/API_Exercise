@@ -15,8 +15,12 @@ router = APIRouter(
 def vote(vote: VoteCreate, session: SessionDep, current_user=Depends(tm.get_current_user)):
 
     post = session.exec(select(Post).where(Post.id == vote.post_id)).first()
+    
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {vote.post_id} does not exist")
+    
+    if post.owner_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Users cannot vote on their own posts")
 
     vote_query = session.exec(select(Vote).
                                  where(Vote.post_id == vote.post_id, Vote.user_id == current_user.id))

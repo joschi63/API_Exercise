@@ -1,12 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, create_engine, select
 
 from alembic import command
 
 from app.config import settings
 from app.main import app
 from app.database import get_session, create_db_and_tables, drop_db_and_tables
+from app.token_managing import create_access_token
+from app.models import post_models, user_models
 
 
 #creating and connecting to test database
@@ -55,4 +57,70 @@ def test_user(client):
     new_user['password'] = user_data['password']
 
     return new_user 
+
+@pytest.fixture
+def test_user2(client):
+    user_data = {
+        "email": "user4@gmail.com",
+        "password": password
+    }
+
+    response = client.post("/users/", json=user_data)
+    assert response.status_code == 201
+
+    new_user = response.json()
+    new_user['password'] = user_data['password']
+
+    return new_user 
+
+
+@pytest.fixture
+def token(test_user):
+    return create_access_token(data={"user_id": test_user['id']})
+
+@pytest.fixture
+def authorized_client(client, token):
+    client.headers = {
+        **client.headers, 
+        "Authorization": f"Bearer {token}"
+    }
+    return client
+
+@pytest.fixture
+def test_posts(test_user, test_user2, session):
+    posts_data = [
+        {
+            "title": "first title",
+            "content": "first content",
+            "owner_id": test_user['id']
+
+        }, {
+            "title": "second title",
+            "content": "second content",
+            "owner_id": test_user['id']
+
+        }, {
+            "title": "third title",
+            "content": "third content",
+            "owner_id": test_user['id']
+        }, {
+            "title": "fourth title",
+            "content": "fourth content",
+            "owner_id": test_user2['id']
+        }
+    ]
+
+    def create_user_model(post):
+        return post_models.Post(**post)
     
+    post_map = map(create_user_model, posts_data)
+    posts = list(post_map)
+
+    session.add_all(posts)
+
+    #session.add_all([post_models.Post(**post) for post in posts_data]) also possible with less code
+
+    session.commit()
+    back_posts = session.exec(select(post_models.Post)).all()
+
+    return back_posts

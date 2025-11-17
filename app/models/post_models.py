@@ -7,28 +7,37 @@ from .user_models import UserRead
 
 
 class PostBase(SQLModel):
-    id: int | None = Field(default=None, primary_key=True, nullable=False)
-    title: str = Field(nullable=False)
-    content: str = Field(nullable=False)
-    published: bool = Field(
-        sa_column=Column(Boolean, nullable=False, server_default=text("TRUE"))
-    ) #this is special for setting a default value in a postgresql database
+    title: str
+    content: str
+    published: bool = True
+
     
     
 class Post(PostBase, table=True):
     __tablename__ = "posts" #type: ignore
-    owner_id: int = Field(foreign_key="users.id", ondelete="CASCADE", nullable=False)
+
+    id: int | None = Field(default=None, primary_key=True)
+    owner_id: int = Field(foreign_key="users.id", nullable=False)
     owner: "User" = Relationship(back_populates="posts") #type: ignore
-    created_at: str | None = Field(
+
+    created_at: datetime | None = Field(
         sa_column=Column(
-            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
-        ), default="now()"
+            TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=text("now()"),
+        )
     )
-    updated_at: str = Field(
+
+    updated_at: datetime | None = Field(
         sa_column=Column(
-            TIMESTAMP(timezone=True), server_default=None
-        ), default=None
+            TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=None,
+            onupdate=text("now()")
+        ),
+        default=None
     )
+
     #Type hinting with a string to avoid circular import
    
     
@@ -47,20 +56,14 @@ class PostOut(BaseModel):
     
 
 class PostCreate(PostBase):
-    created_at: str | None = Field(
-        sa_column=Column(
-            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
-        ), default="now()"
-    )
-    owner_id: int | None = None
+    pass
 
-class PostUpdate(PostBase):
-    updated_at: str = Field(
-        sa_column=Column(
-            TIMESTAMP(timezone=True), nullable=False, server_default=text("now()"), onupdate=text("now()")
-        ), default=None
-    )
-    owner_id: int | None = None
+
+class PostUpdate(BaseModel):
+    title: str | None = None
+    content: str | None = None
+    published: bool | None = None
+
     
 
 

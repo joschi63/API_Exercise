@@ -40,14 +40,15 @@ def get_post(id: int, session: SessionDep, current_user= Depends(tm.get_current_
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostRead)
 def create_post(post: PostCreate, session: SessionDep, current_user = Depends(tm.get_current_user)):
     
-    post.owner_id = current_user.id
-    new_post = Post.model_validate(post)
-    
-    session.add(new_post)
+    db_post = Post(
+        **post.model_dump(),
+        owner_id=current_user.id,
+    )
+
+    session.add(db_post)
     session.commit()
-    session.refresh(new_post)
-    
-    return new_post
+    session.refresh(db_post)
+    return db_post
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -67,12 +68,13 @@ def delete_post(id: int, session: SessionDep, current_user = Depends(tm.get_curr
 
 
 @router.put("/{id}", response_model=PostRead, status_code=status.HTTP_200_OK)
-def update_post(id: int, post: PostUpdate, session: SessionDep, current_user = Depends(tm.get_current_user)):
+def update_post(id: int, post: PostCreate, session: SessionDep, current_user = Depends(tm.get_current_user)):
     db_post = session.get(Post, id)
 
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id: {id} was not found")
-    if post.owner_id != current_user.id:
+    
+    if db_post.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
     
     db_post.sqlmodel_update(post.model_dump(exclude_unset=True))
