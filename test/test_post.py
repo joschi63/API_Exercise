@@ -2,21 +2,6 @@ import pytest
 from typing import List
 from app.models import post_models
 
-
-#@pytest.mark.parametrize("title, content", [("first title", "first content")])
-
-
-# def test_createposts(authorized_client, test_posts):
-#     response = authorized_client.post(
-#         "/posts/",
-#         data={
-#             "title": title,
-#             "content": content
-#         }
-#     )
-#     print(response.json())
-#     assert response.status_code == 201
-
 def test_get_all_posts(authorized_client, test_posts):
     response = authorized_client.get("/posts/")
     # posts = [post_models.PostOut(**post) for post in response.json()]
