@@ -101,5 +101,7 @@ jobs:
                 password: ${{ secrets.PROD_PASSWORD }}
                 script: |
                     cd app/src
-                    git pull 
+                    echo "Forcing clean state..."
+                    git fetch --all
+                    git reset --hard origin/main
                     echo ${{ secrets.PROD_PASSWORD }} | sudo -S systemctl restart api  
