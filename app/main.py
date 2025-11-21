@@ -27,7 +27,7 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to my API-Server on ubuntu!"}
+    return {"message": "Welcome to my API-Server on ubuntu with auto deployment!"}
 
 app.include_router(post.router)
 app.include_router(user.router)
