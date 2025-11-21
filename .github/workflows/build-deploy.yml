@@ -91,5 +91,14 @@ jobs:
         runs-on: ubuntu-latest
         
         steps: 
-            - name: deploying stuff
-              run: echo "deploying..."
+            - name: Execute remote SSH commands using password
+              uses: appleboy/ssh-action@v1
+              with:
+                host: ${{ secrets.PROD_HOST }}
+                username: ${{ secrets.PROD_USERNAME }}
+                password: ${{ secrets.PROD_PASSWORD }}
+                port: ${{ secrets.PROD_PORT }}
+                script: |
+                    cd app/src
+                    git pull 
+                    sudo systemctl restart api
