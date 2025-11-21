@@ -99,7 +99,6 @@ jobs:
                 host: ${{ secrets.PROD_HOST }}
                 username: ${{ secrets.PROD_USERNAME }}
                 password: ${{ secrets.PROD_PASSWORD }}
-                port: 5432
                 script: |
                     cd app/src
                     git pull 
