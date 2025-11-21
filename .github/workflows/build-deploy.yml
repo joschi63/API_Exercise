@@ -89,6 +89,8 @@ jobs:
     deploy: 
         needs: [build]
         runs-on: ubuntu-latest
+        environment: 
+            name: production
         
         steps: 
             - name: Execute remote SSH commands using password
